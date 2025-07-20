@@ -1,0 +1,36 @@
+@startuml
+title Операции чтения и обновления заказов с кешированием (Cache-Aside)
+
+actor Client
+participant "MES UI" as UI
+participant "MES API" as API
+participant "Cache" as Cache
+participant "Database" as DB
+
+== Чтение списка заказов ==
+
+Client -> UI : открыть список заказов
+UI -> API : запрос списка заказов
+API -> Cache : проверить кеш по ключу
+alt Кеш-промах
+    Cache -> API : MISS
+    API -> DB : запрос списка заказов
+    DB -> API : список заказов
+    API -> Cache : записать в кеш
+else Кеш-попадание
+    Cache -> API : список заказов
+end
+API -> UI : вернуть список заказов
+UI -> Client : отобразить список
+
+== Изменение статуса заказа ==
+
+Client -> UI : изменить статус заказа
+UI -> API : запрос изменения статуса
+API -> DB : обновить статус заказа
+DB -> API : подтверждение обновления
+API -> Cache : обновить кеш
+API -> UI : вернуть успешный ответ
+UI -> Client : показать результат
+
+@enduml
